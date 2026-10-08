@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="en" data-palette="orange">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Student Analytics & Success Platform</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+
+        .dark { color-scheme: dark; }
+        .dark body, .dark .bg-gray-50 { background-color: #111827; color: #e5e7eb; }
+        .dark .bg-white { background-color: #1f2937; }
+        .dark .bg-gray-100 { background-color: #374151; }
+        .dark .text-gray-800 { color: #f3f4f6; }
+        .dark .text-gray-700 { color: #e5e7eb; }
+        .dark .text-gray-600 { color: #d1d5db; }
+        .dark .text-gray-500 { color: #9ca3af; }
+        .dark .border-gray-200, .dark .divide-gray-200 > * { border-color: #374151; }
+        .dark .border-gray-300 { border-color: #4b5563; }
+        .dark .hover\:bg-gray-50:hover { background-color: #374151; }
+        .dark .hover\:bg-gray-100:hover { background-color: #374151; }
+        .dark select, .dark input, .dark textarea { color: #e5e7eb; }
+        .dark .bg-orange-100, .dark .bg-orange-50 { background-color: rgba(249,115,22,.2); }
+        .dark .bg-emerald-100, .dark .bg-emerald-50 { background-color: rgba(16,185,129,.2); }
+        .dark .bg-amber-100 { background-color: rgba(245,158,11,.2); }
+        .dark .bg-red-100 { background-color: rgba(239,68,68,.2); }
+        .dark .text-orange-800, .dark .text-orange-700 { color: #fdba74; }
+        .dark .text-emerald-800 { color: #6ee7b7; }
+        .dark .text-amber-800 { color: #fcd34d; }
+        .dark .text-red-800 { color: #fca5a5; }
+        .dark .border-emerald-200 { border-color: rgba(16,185,129,.4); }
+        .dark .border-orange-200 { border-color: rgba(249,115,22,.4); }
+        .dept-chip { background:#fff; color:#4b5563; border-color:#d1d5db; transition:all .15s; }
+        .dept-chip:hover { border-color:#f97316; color:#ea580c; }
+        .dept-chip.chip-on { background:#ea580c; color:#fff; border-color:#ea580c; font-weight:600; }
+        .dark .dept-chip { background:#1f2937; color:#d1d5db; border-color:#4b5563; }
+        .dark .dept-chip.chip-on { background:#ea580c; color:#fff; border-color:#ea580c; }
+        .chart-card { position: relative; z-index: 1; will-change: transform;
+            transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease; }
+        .chart-card:hover { transform: scale(1.12); z-index: 20; border-color: #f97316;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,.35); }
+        .dark .chart-card:hover { background-color: #1f2937; }
+        @media (prefers-reduced-motion: reduce) { .chart-card, .chart-card:hover { transition: none; transform: none; } }
+        .active-tab {
+            border-bottom: 2px solid #f97316;
+            color: #f97316;
+            font-weight: 600;
+        }
+
+        html[data-palette="orange"] { --accent:#f97316; --accent-dark:#ea580c; --accent-light:#fdba74; --accent-rgb:249,115,22; }
+        html[data-palette="ocean"]  { --accent:#3b82f6; --accent-dark:#2563eb; --accent-light:#93c5fd; --accent-rgb:59,130,246; }
+        html[data-palette="forest"] { --accent:#14b8a6; --accent-dark:#0d9488; --accent-light:#5eead4; --accent-rgb:20,184,166; }
+        html[data-palette="violet"] { --accent:#8b5cf6; --accent-dark:#7c3aed; --accent-light:#c4b5fd; --accent-rgb:139,92,246; }
+        html[data-palette="rose"]   { --accent:#f43f5e; --accent-dark:#e11d48; --accent-light:#fda4af; --accent-rgb:244,63,94; }
+        .dept-chip:hover { border-color: var(--accent); color: var(--accent-dark); }
+        .dept-chip.chip-on, .dark .dept-chip.chip-on { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+        .chart-card:hover { border-color: var(--accent); }
+        .active-tab { border-bottom-color: var(--accent); color: var(--accent); }
+        html.dark[data-palette] .bg-orange-100, html.dark[data-palette] .bg-orange-50 { background-color: rgba(var(--accent-rgb), .2); }
+        html.dark[data-palette] .text-orange-800, html.dark[data-palette] .text-orange-700 { color: var(--accent-light); }
+        html.dark[data-palette] .border-orange-200 { border-color: rgba(var(--accent-rgb), .4); }
+        .palette-dot { width: 18px; height: 18px; border-radius: 9999px; border: 2px solid transparent; transition: transform .2s ease, border-color .2s ease; }
+        .palette-dot:hover { transform: scale(1.3); }
+        .palette-dot.on { border-color: #fff; transform: scale(1.15); }
+
+        /* ---- Animations ---- */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        @keyframes pulseSoft { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.35); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+        @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .tab-content:not(.hidden) { animation: fadeUp .45s ease backwards; }
+        #kpiRow > div, #insightsPanel > div, #segCards > div { animation: fadeUp .55s cubic-bezier(.2,.8,.2,1) backwards; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+        #kpiRow > div:hover, #insightsPanel > div:hover, #segCards > div:hover { transform: translateY(-4px); box-shadow: 0 12px 24px -10px rgba(0,0,0,.28); }
+        #kpiRow > div:nth-child(2), #insightsPanel > div:nth-child(2), #segCards > div:nth-child(2) { animation-delay: .07s; }
+        #kpiRow > div:nth-child(3), #insightsPanel > div:nth-child(3), #segCards > div:nth-child(3) { animation-delay: .14s; }
+        #kpiRow > div:nth-child(4), #insightsPanel > div:nth-child(4), #segCards > div:nth-child(4) { animation-delay: .21s; }
+        #segCards > div:nth-child(5) { animation-delay: .28s; } #segCards > div:nth-child(6) { animation-delay: .35s; } #segCards > div:nth-child(7) { animation-delay: .42s; }
+        #kpiRow > div:nth-child(3) > div:last-child { animation: pulseSoft 2.4s ease-in-out infinite; }
+        header .fa-graduation-cap { animation: floaty 3s ease-in-out infinite; }
+        #riskTableBody tr { animation: fadeUp .35s ease backwards; }
+        button:active { transform: scale(.96); }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    </style>
+<script>
+        try { if (localStorage.getItem('edupulse-theme') === 'dark') document.documentElement.classList.add('dark'); var pl = localStorage.getItem('edupulse-palette'); if (pl) document.documentElement.setAttribute('data-palette', pl); } catch (e) {}
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+    <!-- Header / Navbar -->
+    <header class="bg-gray-900 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-graduation-cap text-orange-400 text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-wide">EduPulse <span class="text-xs px-2 py-1 bg-orange-600 rounded-full font-normal">Analytics Platform</span></h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="paletteSwatches" class="flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg" title="Colour theme"><button data-palette="orange" onclick="setPalette('orange')" title="Sunset" class="palette-dot" style="background:#f97316"></button><button data-palette="ocean" onclick="setPalette('ocean')" title="Ocean" class="palette-dot" style="background:#3b82f6"></button><button data-palette="forest" onclick="setPalette('forest')" title="Forest" class="palette-dot" style="background:#14b8a6"></button><button data-palette="violet" onclick="setPalette('violet')" title="Violet" class="palette-dot" style="background:#8b5cf6"></button><button data-palette="rose" onclick="setPalette('rose')" title="Rose" class="palette-dot" style="background:#f43f5e"></button></div>
+                <span id="backendStatus" class="text-xs text-gray-300" role="status" aria-live="polite">Connecting to backend…</span>
+                <button id="themeToggle" onclick="toggleTheme()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow" title="Switch theme">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i> <span id="themeLabel">Dark</span>
+                </button>
+                <button id="openImportModal" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-file-csv"></i> Load Custom Data
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Top Executive KPI Cards -->
+        <section id="kpiRow" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div onclick="drillToRisk({})" title="View all students" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md hover:border-orange-300 transition">
+                <div>
+                    <p class="text-xs uppercase font-semibold text-gray-400">Total Students</p>
+                    <h3 id="kpiTotalStudents" class="text-2xl font-bold text-gray-800">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <i class="fa-solid fa-users text-lg"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs uppercase font-semibold text-gray-400">Avg Success Score</p>
+                    <h3 id="kpiAvgSuccess" class="text-2xl font-bold text-gray-800">0.0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <i class="fa-solid fa-chart-line text-lg"></i>
+                </div>
+            </div>
+
+            <div onclick="drillToRisk({tier:'At-Risk'})" title="View at-risk students" class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md hover:border-orange-300 transition">
+                <div>
+                    <p class="text-xs uppercase font-semibold text-gray-400">At-Risk Count</p>
+                    <h3 id="kpiAtRisk" class="text-2xl font-bold text-red-600">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs uppercase font-semibold text-gray-400">Placement Ready</p>
+                    <h3 id="kpiPlacementReady" class="text-2xl font-bold text-orange-600">0%</h3>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+                    <i class="fa-solid fa-briefcase text-lg"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div class="flex border-b border-gray-200 overflow-x-auto text-sm text-gray-600">
+                <button data-tab="exec-overview" class="tab-btn active-tab px-6 py-3 flex items-center gap-2 whitespace-nowrap" onclick="switchTab(event, 'exec-overview')">
+                    <i class="fa-solid fa-chart-pie"></i> Executive Overview
+                </button>
+                <button data-tab="segmentation" class="tab-btn px-6 py-3 flex items-center gap-2 whitespace-nowrap" onclick="switchTab(event, 'segmentation')">
+                    <i class="fa-solid fa-layer-group text-orange-500"></i> Segmentation
+                </button>
+                <button data-tab="risk-intervention" class="tab-btn px-6 py-3 flex items-center gap-2 whitespace-nowrap" onclick="switchTab(event, 'risk-intervention')">
+                    <i class="fa-solid fa-shield-halved text-red-500"></i> Risk & Intervention
+                </button>
+                <button data-tab="student-report" class="tab-btn px-6 py-3 flex items-center gap-2 whitespace-nowrap" onclick="switchTab(event, 'student-report')">
+                    <i class="fa-solid fa-id-card text-orange-500"></i> Student Report
+                </button>
+                <button data-tab="simulator" class="tab-btn px-6 py-3 flex items-center gap-2 whitespace-nowrap" onclick="switchTab(event, 'simulator')">
+                    <i class="fa-solid fa-sliders"></i> Intervention Simulator
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- Tab 1: Executive Overview -->
+                <div id="tab-exec-overview" class="tab-content space-y-6">
+
+                    <!-- Quick filters -->
+                    <div class="flex flex-wrap items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                        <span class="text-xs font-semibold text-gray-600 flex items-center gap-1"><i class="fa-solid fa-filter text-orange-500"></i> View:</span>
+                        <div id="deptChips" class="flex flex-wrap gap-2">
+                            <button data-dept="ALL" onclick="setOverviewDept('ALL')" class="dept-chip text-xs px-3 py-1.5 rounded-full border">All Departments</button>
+                            <button data-dept="CS" onclick="setOverviewDept('CS')" class="dept-chip text-xs px-3 py-1.5 rounded-full border">CS</button>
+                            <button data-dept="IT" onclick="setOverviewDept('IT')" class="dept-chip text-xs px-3 py-1.5 rounded-full border">IT</button>
+                            <button data-dept="ECE" onclick="setOverviewDept('ECE')" class="dept-chip text-xs px-3 py-1.5 rounded-full border">ECE</button>
+                            <button data-dept="EEE" onclick="setOverviewDept('EEE')" class="dept-chip text-xs px-3 py-1.5 rounded-full border">EEE</button>
+                            <button data-dept="MECH" onclick="setOverviewDept('MECH')" class="dept-chip text-xs px-3 py-1.5 rounded-full border">MECH</button>
+                        </div>
+                        <select id="overviewYear" onchange="setOverviewYear(this.value)" class="text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <option value="ALL">All Years</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                        <button onclick="resetOverviewFilters()" class="text-xs text-orange-600 hover:text-orange-800 font-medium">Reset</button>
+                        <span id="overviewScope" class="ml-auto text-xs text-gray-500"></span>
+                    </div>
+
+                    <!-- Plain-language insights -->
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-amber-500"></i> What the data says</h4>
+                        <div id="insightsPanel" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-bar text-orange-500"></i> Success Score Distribution
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">How many students fall in each score range. Red bars need help, green bars are doing great.</p>
+                            <div class="h-60 relative"><canvas id="chartSuccessDist"></canvas></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-pie text-red-500"></i> Risk Groups
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">Share of students in each group. <b>Click a slice</b> to see those students.</p>
+                            <div class="h-60 relative"><canvas id="chartRiskDist"></canvas></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-building-columns text-emerald-500"></i> Department Performance (Avg CGPA)
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">Average CGPA out of 10 for each department. <b>Click a bar</b> to see that department.</p>
+                            <div class="h-60 relative"><canvas id="chartDeptPerf"></canvas></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-arrow-trend-up text-orange-500"></i> Success Score by Year
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">Average success score for each year of study. <b>Click a point</b> to see that year.</p>
+                            <div class="h-60 relative"><canvas id="chartYearTrends"></canvas></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-dot text-amber-500"></i> Attendance vs. Success Score
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">Each dot is one student. Dots in the top-right attend more and score higher. <b>Click a dot</b> to open that student's report.</p>
+                            <div class="h-60 relative"><canvas id="chartAttendanceVsSuccess"></canvas></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-user-check text-orange-500"></i> Placement Readiness by Department
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">Ready = score 70+, coding 65+, and no backlogs. <b>Click a bar</b> to see that department.</p>
+                            <div class="h-60 relative"><canvas id="chartPlacementReadiness"></canvas></div>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card lg:col-span-2">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-orange-500"></i> What Drives the Success Score</h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-1">Average points each factor adds to the score. Backlogs subtract points.</p>
+                            <p class="text-[11px] text-gray-500 mb-3 font-mono">Score = 2.5×CGPA + 0.20×Attendance + 0.15×LMS + 0.15×Coding + 0.15×Skills − 5×Backlogs (kept between 0 and 100)</p>
+                            <div class="h-60 relative"><canvas id="chartScoreDrivers"></canvas></div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 chart-card">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-flag text-red-500"></i> Why Students Are Flagged</h4>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">How many students trigger each risk rule. A student can trigger more than one.</p>
+                            <div class="h-60 relative"><canvas id="chartRiskTriggers"></canvas></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Tab: Student Segmentation -->
+                <div id="tab-segmentation" class="tab-content hidden space-y-6">
+                    <div>
+                        <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-layer-group text-orange-500"></i> Student Segments</h4>
+                        <p class="text-xs text-gray-500 mt-1">Every student belongs to exactly one segment, decided by simple rules (shown on each card). Click a segment to see who is in it and the action to take.</p>
+                    </div>
+                    <div id="segEmpty" class="text-center text-sm text-gray-500 py-16">No data yet. Load a dataset to see segments.</div>
+                    <div id="segBody" class="hidden space-y-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2"><div id="segCards" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-1">Segment Sizes</h4>
+                                <p class="text-xs text-gray-500 mb-2">Click a slice to open that segment.</p>
+                                <div class="h-64 relative"><canvas id="chartSegments"></canvas></div>
+                            </div>
+                        </div>
+                        <div id="segDetail" class="bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-4"></div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Risk & Intervention -->
+                <div id="tab-risk-intervention" class="tab-content hidden space-y-6">
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-4">
+                        <div class="flex justify-between items-center border-b border-gray-200 pb-3">
+                            <h4 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <i class="fa-solid fa-filter text-orange-600"></i> Dataset Risk Filters
+                            </h4>
+                            <button onclick="resetRiskFilters()" class="text-xs text-orange-600 hover:text-orange-800 font-medium">
+                                Reset All Filters
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Department</label>
+                                <select id="filterDept" class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="applyRiskFilters()">
+                                    <option value="ALL">All Depts</option>
+                                    <option value="CS">CS</option>
+                                    <option value="IT">IT</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="MECH">MECH</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Year</label>
+                                <select id="filterYear" class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="applyRiskFilters()">
+                                    <option value="ALL">All Years</option>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Section</label>
+                                <select id="filterSection" class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="applyRiskFilters()">
+                                    <option value="ALL">All Sections</option>
+                                    <option value="Sec A">Sec A</option>
+                                    <option value="Sec B">Sec B</option>
+                                    <option value="Sec C">Sec C</option>
+                                    <option value="Sec D">Sec D</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Risk Level</label>
+                                <select id="filterRiskLevel" class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="applyRiskFilters()">
+                                    <option value="ALL">All Tiers</option>
+                                    <option value="Top Performers">Top Performers</option>
+                                    <option value="Average">Average</option>
+                                    <option value="At-Risk">At-Risk</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Segment</label>
+                                <select id="filterSegment" class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="applyRiskFilters()">
+                                    <option value="ALL">All Segments</option>
+                                    <option value="Critical Focus">Critical Focus</option>
+                                    <option value="Attendance & Engagement">Attendance & Engagement</option>
+                                    <option value="Academic Support">Academic Support</option>
+                                    <option value="Skill Builders">Skill Builders</option>
+                                    <option value="Steady Performers">Steady Performers</option>
+                                    <option value="Placement Ready">Placement Ready</option>
+                                    <option value="High Potential">High Potential</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Gender</label>
+                                <select id="filterGender" class="w-full text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="applyRiskFilters()">
+                                    <option value="ALL">All Genders</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Non-Binary">Non-Binary</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs text-gray-500 bg-white px-4 py-2 rounded-lg border border-gray-200">
+                        <span>Showing <strong id="riskRecordCount" class="text-gray-800">0</strong> matching records</span>
+                        <span id="riskPctSummary" class="font-medium text-gray-700">At-Risk Ratio: 0%</span>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded-xl bg-white shadow-sm">
+                        <table class="w-full text-left text-xs text-gray-700">
+                            <thead class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b border-gray-200">
+                                <tr>
+                                    <th class="p-3">Student ID</th>
+                                    <th class="p-3">Dept</th>
+                                    <th class="p-3">Year</th>
+                                    <th class="p-3">Sec</th>
+                                    <th class="p-3">Gender</th>
+                                    <th class="p-3">CGPA</th>
+                                    <th class="p-3">Att. %</th>
+                                    <th class="p-3">Backlogs</th>
+                                    <th class="p-3">Success Score</th>
+                                    <th class="p-3">Segment</th>
+                                    <th class="p-3">Key Reasons</th>
+                                    <th class="p-3">Risk Tier</th>
+                                    <th class="p-3">Report</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riskTableBody" class="divide-y divide-gray-200">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Individual Student Report -->
+                <div id="tab-student-report" class="tab-content hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                        <div class="flex items-center gap-3">
+                            <button onclick="showTab('risk-intervention')" class="text-xs text-orange-600 hover:text-orange-800 font-medium flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-left"></i> Back to Risk & Intervention
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label for="reportStudentSelect" class="text-xs font-semibold text-gray-600">Student</label>
+                            <select id="reportStudentSelect" class="text-xs border border-gray-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500" onchange="onReportSelectChange()"></select>
+                            <button onclick="window.print()" class="text-xs px-3 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-print"></i> Print</button>
+                        </div>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-xs text-gray-700 space-y-2">
+                        <p class="font-semibold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-circle-info text-orange-500"></i> How the Student Success Score works</p>
+                        <p>The Success Score (0 to 100) is a single number that summarises how a student is doing. It combines five indicators, each with a weight, and then subtracts a penalty for backlogs:</p>
+                        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 list-disc pl-5">
+                            <li><b>CGPA (25%)</b>: scaled to 100 (CGPA &times; 10)</li>
+                            <li><b>Attendance (20%)</b>: percentage of classes attended</li>
+                            <li><b>LMS completion (15%)</b>: share of course modules finished</li>
+                            <li><b>Coding (15%)</b> and <b>Skills (15%)</b>: assessment scores out of 100</li>
+                            <li><b>Backlogs</b>: 5 points subtracted for each one</li>
+                        </ul>
+                        <p class="font-mono text-[11px] text-gray-600">Score = 0.25&times;(CGPA&times;10) + 0.20&times;Attendance + 0.15&times;LMS + 0.15&times;Coding + 0.15&times;Skills &minus; 5&times;Backlogs, kept between 0 and 100.</p>
+                        <p class="text-gray-500">Aptitude, engagement and feedback are not part of the score. The risk tier uses the score together with CGPA and backlog rules, shown further down in each report.</p>
+                    </div>
+                    <div id="reportEmpty" class="text-center text-sm text-gray-500 py-16">
+                        <i class="fa-solid fa-user-graduate text-3xl text-gray-300 mb-3 block"></i>
+                        No student selected. Load data, then click "View Report" on a student in the Risk & Intervention tab.
+                    </div>
+                    <div id="reportContent" class="hidden space-y-6"></div>
+                </div>
+
+                <!-- Tab 5: Intervention Simulator -->
+                <div id="tab-simulator" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-50 p-5 rounded-lg border border-gray-200 space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-sliders text-orange-500"></i> Simulation Parameters
+                            </h4>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-600 block mb-1">Target Attendance Boost (+%)</label>
+                                <input type="range" id="simAttendance" min="0" max="30" value="10" class="w-full" oninput="runSimulation()">
+                                <span id="simAttendanceVal" class="text-xs text-orange-600 font-bold">+10%</span>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-600 block mb-1">Target LMS Completion Boost (+%)</label>
+                                <input type="range" id="simLMS" min="0" max="30" value="15" class="w-full" oninput="runSimulation()">
+                                <span id="simLMSVal" class="text-xs text-orange-600 font-bold">+15%</span>
+                            </div>
+                            <div>
+                                <label class="text-xs font-semibold text-gray-600 block mb-1">Backlog Clearance Support (Cleared)</label>
+                                <input type="range" id="simBacklog" min="0" max="5" value="1" class="w-full" oninput="runSimulation()">
+                                <span id="simBacklogVal" class="text-xs text-orange-600 font-bold">1 Backlog</span>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2 bg-gray-50 p-5 rounded-lg border border-gray-200 space-y-4">
+                            <h4 class="text-sm font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles text-emerald-500"></i> Projected Cohort Impact
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <p class="text-xs text-gray-500">Current At-Risk Students</p>
+                                    <h3 id="simCurrentAtRisk" class="text-2xl font-bold text-red-600">0</h3>
+                                </div>
+                                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                                    <p class="text-xs text-gray-500">Projected At-Risk Students</p>
+                                    <h3 id="simProjectedAtRisk" class="text-2xl font-bold text-emerald-600">0</h3>
+                                </div>
+                            </div>
+                            <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-xs text-emerald-800 flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                                <span>Projected At-Risk Reduction: <strong id="simReduction">0%</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Data Upload Modal -->
+    <div id="importModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-xl w-full p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-database text-orange-600"></i> Import Student Dataset
+                </h3>
+                <button id="closeImportModal" class="text-gray-400 hover:text-gray-600 text-lg">&times;</button>
+            </div>
+
+            <p class="text-xs text-gray-500">
+                Upload a CSV file or paste raw comma-separated values containing columns like: <br/>
+                <code class="bg-gray-100 text-gray-800 px-1 py-0.5 rounded">Student ID, Department, Year, Section, Gender, CGPA, Attendance (%), LMS Completion (%), Backlogs, Coding, Aptitude</code>
+            </p>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Option A: Upload CSV File</label>
+                <input type="file" id="csvFileInput" accept=".csv" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Option B: Paste Raw CSV Text</label>
+                <textarea id="rawCsvText" rows="6" class="w-full p-3 border border-gray-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Student ID,CGPA,Attendance (%),LMS Completion (%),Backlogs,Coding,Aptitude,Skills,Engagement (%),Feedback&#10;S001,8.70,92%,95%,0,82,88,85,70%,4.4"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-2 border-t">
+                <button id="clearDataBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100">Clear Data</button>
+                <button id="resetDefaultBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100">Load Sample Data</button>
+                <button id="loadDataBtn" class="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-xs font-medium shadow">Process & Load</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Sample CSV dataset (loaded only when you click "Load Sample Data")
+        const DEFAULT_CSV = `Student ID,Department,Year,Section,Gender,CGPA,Attendance (%),LMS Completion (%),Backlogs,Coding,Aptitude,Skills,Engagement (%),Feedback
+S002,IT,3rd Year,Sec B,Male,6.16,68%,54%,3,48,52,45,30%,3.1
+S003,ECE,2nd Year,Sec A,Female,8.28,99%,100%,0,55,61,58,85%,4.2
+S004,CS,4th Year,Sec C,Male,9.15,96%,98%,0,90,94,92,88%,4.8
+S005,EEE,1st Year,Sec D,Male,5.40,61%,42%,4,38,45,40,25%,2.8
+S006,MECH,3rd Year,Sec B,Female,7.45,83%,78%,1,68,72,70,65%,3.8
+S007,CS,2nd Year,Sec A,Female,8.90,94%,91%,0,85,82,86,80%,4.6
+S008,IT,1st Year,Sec C,Male,6.80,74%,68%,2,58,64,60,45%,3.5
+S009,ECE,4th Year,Sec B,Non-Binary,9.50,98%,97%,0,95,96,94,92%,4.9
+S010,EEE,2nd Year,Sec A,Male,7.10,79%,75%,1,62,65,63,55%,3.6
+S011,MECH,3rd Year,Sec D,Male,5.85,65%,50%,3,42,48,44,32%,3.0
+S012,CS,1st Year,Sec B,Female,8.10,88%,86%,0,76,79,75,72%,4.1
+S013,IT,4th Year,Sec C,Male,6.40,71%,60%,2,50,56,52,40%,3.3
+S014,ECE,3rd Year,Sec A,Female,7.95,91%,89%,0,72,75,78,78%,4.0
+S015,EEE,2nd Year,Sec B,Male,8.65,93%,94%,0,84,86,88,82%,4.5
+S016,CS,4th Year,Sec A,Female,9.30,97%,99%,0,92,91,95,90%,4.9
+S017,MECH,1st Year,Sec D,Male,5.10,58%,38%,5,32,40,35,20%,2.5
+S018,IT,2nd Year,Sec C,Female,7.70,85%,82%,0,70,74,72,68%,3.9
+S019,ECE,3rd Year,Sec B,Male,6.60,72%,63%,2,54,60,56,42%,3.4
+S020,CS,1st Year,Sec A,Female,8.45,90%,88%,0,80,83,81,75%,4.3`;
+
+        let rawStudentsData = [];
+        let processedData = [];
+        let chartInstances = {};
+
+        const DEPARTMENTS = ['CS', 'IT', 'ECE', 'EEE', 'MECH'];
+        const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+        const SECTIONS = ['Sec A', 'Sec B', 'Sec C', 'Sec D'];
+        const GENDERS = ['Male', 'Female', 'Non-Binary'];
+
+        // ---------- Segments & explainability model ----------
+        const SEGMENTS = [
+            { name: 'Critical Focus', color: '#ef4444', icon: 'fa-triangle-exclamation', rule: '3+ backlogs, or Success Score below 50', action: 'Start immediate one-to-one mentoring, a backlog-clearance plan and a weekly review with the faculty advisor.' },
+            { name: 'Attendance & Engagement', color: '#fb923c', icon: 'fa-user-clock', rule: 'At-Risk, with attendance below 75% or LMS below 65%', action: 'Reach out to the student and family, set an attendance contract, and assign LMS catch-up tasks.' },
+            { name: 'Academic Support', color: '#a855f7', icon: 'fa-book-open', rule: 'At-Risk, but attendance and LMS are fine (weak grades)', action: 'Offer remedial classes, peer tutoring and extra practice for weak subjects.' },
+            { name: 'Skill Builders', color: '#0ea5e9', icon: 'fa-code', rule: 'Not at risk, but coding or skills score below 65', action: 'Enrol in coding labs, aptitude workshops and skill-certification courses.' },
+            { name: 'Steady Performers', color: '#9ca3af', icon: 'fa-gauge-high', rule: 'Not at risk, balanced scores, not yet placement ready', action: 'Keep monitoring. Encourage projects, internships and clubs to build momentum.' },
+            { name: 'Placement Ready', color: '#14b8a6', icon: 'fa-briefcase', rule: 'Score 70+, coding 65+, no backlogs (not Top)', action: 'Run mock interviews, resume reviews and connect with recruiters.' },
+            { name: 'High Potential', color: '#10b981', icon: 'fa-star', rule: 'Top Performer: score 80+, CGPA 8+, no backlogs', action: 'Offer mentoring roles, research or advanced projects, and fast-track placements.' }
+        ];
+        const FACTORS = [
+            { k: 'cgpa', label: 'CGPA', mult: 2.5 }, { k: 'attendance', label: 'Attendance', mult: 0.20 },
+            { k: 'lms', label: 'LMS completion', mult: 0.15 }, { k: 'coding', label: 'Coding', mult: 0.15 },
+            { k: 'skills', label: 'Skills', mult: 0.15 }, { k: 'backlogs', label: 'Backlogs', mult: -5 }
+        ];
+
+        function segInfo(name) { return SEGMENTS.find(x => x.name === name) || SEGMENTS[4]; }
+        function segBadge(name) {
+            const c = segInfo(name).color;
+            return `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap" style="background:${c}26;color:${c}">${name.replace('&', '&amp;')}</span>`;
+        }
+
+        // Returns [segment, plain-language reason]
+        function assignSegment(x) {
+            if (x.backlogs >= 3 || x.shi < 50) return ['Critical Focus', x.backlogs >= 3 ? `${x.backlogs} backlogs` : `Success Score ${x.shi} is below 50`];
+            if (x.tier === 'At-Risk') {
+                if (x.attendance < 75 || x.lms < 65) return ['Attendance & Engagement', `Attendance ${x.attendance}%, LMS ${x.lms}%`];
+                return ['Academic Support', x.cgpa < 6.5 ? `CGPA ${x.cgpa} is below 6.5` : `Success Score ${x.shi} is below 60`];
+            }
+            if (x.tier === 'Top Performers') return ['High Potential', `Score ${x.shi}, CGPA ${x.cgpa}, no backlogs`];
+            if (x.placementReady) return ['Placement Ready', `Score ${x.shi}, coding ${x.coding}, no backlogs`];
+            if (x.coding < 65 || x.skills < 65) return ['Skill Builders', `Coding ${x.coding}, skills ${x.skills} (below 65)`];
+            return ['Steady Performers', 'Balanced across all indicators'];
+        }
+
+        let _avgFor = null, _avgCache = null;
+        function cohortAverages() {
+            if (_avgFor === processedData && _avgCache) return _avgCache;
+            const n = processedData.length || 1, o = {};
+            FACTORS.forEach(f => { o[f.k] = processedData.reduce((a, x) => a + (Number(x[f.k]) || 0), 0) / n; });
+            _avgFor = processedData; _avgCache = o; return o;
+        }
+        function scoreDrivers(st) {
+            const avg = cohortAverages();
+            return FACTORS.map(f => ({ ...f, value: st[f.k], avg: avg[f.k], delta: f.mult * (st[f.k] - avg[f.k]) }));
+        }
+        function quickReasons(st) {
+            const r = [];
+            if (st.shi < 60) r.push('Score &lt; 60');
+            if (st.cgpa < 6.5) r.push('CGPA &lt; 6.5');
+            if (st.backlogs >= 3) r.push(`${st.backlogs} backlogs`);
+            if (r.length) { if (st.attendance < 75) r.push('Low attendance'); return r.join(' · '); }
+            if (st.tier === 'Top Performers') return 'All top criteria met';
+            const best = scoreDrivers(st).reduce((a, b) => b.delta > a.delta ? b : a);
+            return best.delta > 0 ? `Strength: ${best.label}` : 'Near cohort average';
+        }
+        function accent() {
+            const cs = getComputedStyle(document.documentElement), g = v => cs.getPropertyValue(v).trim();
+            return { main: g('--accent') || '#f97316', dark: g('--accent-dark') || '#ea580c', rgb: g('--accent-rgb') || '249,115,22' };
+        }
+
+        // Parse CSV string into array of objects
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) return [];
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+                const entry = {};
+                headers.forEach((h, idx) => {
+                    let val = values[idx] || '';
+                    if (val.endsWith('%')) val = parseFloat(val.replace('%', '')) || 0;
+                    else if (!isNaN(val) && val !== '') val = parseFloat(val);
+                    entry[h] = val;
+                });
+                data.push(entry);
+            }
+            return data;
+        }
+
+        // Clean up category values so "cs", "Female ", 2 or "a" still match the filter options
+        function normDept(v) { return String(v).trim().toUpperCase(); }
+        function normYear(v) {
+            const t = String(v).trim().toLowerCase();
+            const w = { first: 1, second: 2, third: 3, fourth: 4 }[t.split(/\s+/)[0]];
+            const m = t.match(/[1-4]/);
+            const d = w || (m ? parseInt(m[0], 10) : 0);
+            return d ? YEARS[d - 1] : String(v).trim();
+        }
+        function normSection(v) {
+            const m = String(v).trim().match(/^(?:sec(?:tion)?\.?\s*)?([a-z])$/i);
+            return m ? 'Sec ' + m[1].toUpperCase() : String(v).trim();
+        }
+        function normGender(v) {
+            const t = String(v).trim().toLowerCase();
+            if (['m', 'male', 'man', 'boy'].includes(t)) return 'Male';
+            if (['f', 'female', 'woman', 'girl'].includes(t)) return 'Female';
+            if (['nb', 'non-binary', 'nonbinary', 'non binary', 'other'].includes(t)) return 'Non-Binary';
+            return t ? t.charAt(0).toUpperCase() + t.slice(1) : String(v);
+        }
+
+        // Standardize & derive student metrics
+        function processData(rawData) {
+            return rawData.map((s, idx) => {
+                const id = s['Student ID'] || s['ID'] || s['id'] || `S${idx+1}`;
+                const cgpa = s['CGPA'] || s['cgpa'] || 0;
+                const attendance = s['Attendance (%)'] || s['Attendance'] || 0;
+                const lms = s['LMS Completion (%)'] || s['LMS'] || 0;
+                const backlogs = s['Backlogs'] || 0;
+                const coding = s['Coding'] || 0;
+                const aptitude = s['Aptitude'] || 0;
+                const skills = s['Skills'] || 0;
+                const feedback = s['Feedback'] || 0;
+
+                const dept = normDept(s['Department'] || DEPARTMENTS[idx % DEPARTMENTS.length]);
+                const year = normYear(s['Year'] || YEARS[idx % YEARS.length]);
+                const section = normSection(s['Section'] || SECTIONS[idx % SECTIONS.length]);
+                const gender = normGender(s['Gender'] || GENDERS[idx % GENDERS.length]);
+
+                // Success Score (0 - 100)
+                let shi = (0.25 * cgpa * 10) + (0.20 * attendance) + (0.15 * lms) + (0.15 * coding) + (0.15 * skills) - (5.0 * backlogs);
+                shi = Math.max(0, Math.min(100, Math.round(shi * 10) / 10));
+
+                let tier = 'Average';
+                if (shi >= 80 && cgpa >= 8.0 && backlogs === 0) tier = 'Top Performers';
+                else if (shi < 60 || cgpa < 6.5 || backlogs >= 3) tier = 'At-Risk';
+
+                const placementReady = (shi >= 70 && coding >= 65 && backlogs === 0);
+                const [segment, segmentWhy] = assignSegment({ shi, cgpa, attendance, lms, backlogs, coding, skills, tier, placementReady });
+
+                return { id, dept, year, section, gender, cgpa, attendance, lms, backlogs, coding, aptitude, skills, feedback, shi, tier, segment, segmentWhy, placementReady };
+            });
+        }
+
+        function renderDashboard() {
+            renderOverview();
+            renderSegmentation();
+            applyRiskFilters();
+            populateReportSelect();
+            runSimulation();
+        }
+
+        // Render Risk & Intervention Tab Data Table & Summary
+        const RISK_FILTERS = [
+            { id: 'filterDept', key: 'dept', all: 'All Depts', base: () => DEPARTMENTS },
+            { id: 'filterYear', key: 'year', all: 'All Years', base: () => YEARS },
+            { id: 'filterSection', key: 'section', all: 'All Sections', base: () => SECTIONS },
+            { id: 'filterRiskLevel', key: 'tier', all: 'All Tiers', base: () => ['Top Performers', 'Average', 'At-Risk'] },
+            { id: 'filterSegment', key: 'segment', all: 'All Segments', base: () => SEGMENTS.map(x => x.name) },
+            { id: 'filterGender', key: 'gender', all: 'All Genders', base: () => GENDERS }
+        ];
+
+        function readRiskFilters() {
+            const v = {};
+            RISK_FILTERS.forEach(f => { v[f.key] = document.getElementById(f.id).value || 'ALL'; });
+            return v;
+        }
+        function riskMatch(item, vals, skipKey) {
+            return RISK_FILTERS.every(f => f.key === skipKey || vals[f.key] === 'ALL' || item[f.key] === vals[f.key]);
+        }
+
+        // Rebuild every dropdown so each option shows how many students it would give
+        // together with ALL the other filters. Options that would give 0 are disabled.
+        function refreshRiskFilterOptions(vals) {
+            RISK_FILTERS.forEach(f => {
+                const sel = document.getElementById(f.id);
+                const others = processedData.filter(it => riskMatch(it, vals, f.key));
+                const seen = f.base().slice();
+                processedData.forEach(it => { if (!seen.includes(it[f.key])) seen.push(it[f.key]); });
+                const cur = vals[f.key];
+                const esc = t => String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                let html = `<option value="ALL">${f.all} (${others.length})</option>`;
+                seen.forEach(val => {
+                    const c = others.filter(it => it[f.key] === val).length;
+                    html += `<option value="${esc(val)}"${c === 0 && val !== cur ? ' disabled' : ''}>${esc(val)} (${c})</option>`;
+                });
+                sel.innerHTML = html;
+                sel.value = cur;
+                if (sel.value !== cur) sel.value = 'ALL';
+            });
+        }
+
+        function clearRiskFilter(id) { document.getElementById(id).value = 'ALL'; applyRiskFilters(); }
+
+        function applyRiskFilters() {
+            const vals = readRiskFilters();
+            refreshRiskFilterOptions(vals);
+            const cur = readRiskFilters();
+            const filtered = processedData.filter(item => riskMatch(item, cur));
+
+            document.getElementById('riskRecordCount').innerText = filtered.length;
+            const atRiskInFiltered = filtered.filter(f => f.tier === 'At-Risk').length;
+            const atRiskPct = filtered.length ? Math.round((atRiskInFiltered / filtered.length) * 100) : 0;
+            document.getElementById('riskPctSummary').innerText = `At-Risk Ratio: ${atRiskPct}% (${atRiskInFiltered} students)`;
+
+            const tbody = document.getElementById('riskTableBody');
+            tbody.innerHTML = '';
+
+            if (!filtered.length) {
+                const active = RISK_FILTERS.filter(f => cur[f.key] !== 'ALL');
+                let msg = processedData.length ? 'No students match <b>all</b> the selected filters at once.' : 'No data loaded yet.';
+                const hints = active.map(f => ({ f, n: processedData.filter(it => riskMatch(it, cur, f.key)).length })).filter(h => h.n > 0)
+                    .map(h => `<button onclick="clearRiskFilter('${h.f.id}')" class="mx-1 my-0.5 px-2 py-1 rounded-lg border border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100">Clear ${h.f.all.replace('All ', '').replace(/s$/, '')} = ${String(cur[h.f.key]).replace(/&/g, '&amp;')} (${h.n} students)</button>`).join('');
+                tbody.innerHTML = `<tr><td colspan="13" class="p-6 text-center text-gray-500">${msg}${hints ? '<div class="mt-2">Try removing one:</div><div>' + hints + '</div>' : ''}</td></tr>`;
+            }
+
+            filtered.forEach(s => {
+                const tierColor = s.tier === 'Top Performers' ? 'bg-emerald-100 text-emerald-800' :
+                                  s.tier === 'Average' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition';
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-gray-800">${s.id}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-gray-100 border border-gray-200 rounded">${s.dept}</span></td>
+                    <td class="p-3">${s.year}</td>
+                    <td class="p-3">${s.section}</td>
+                    <td class="p-3">${s.gender}</td>
+                    <td class="p-3">${s.cgpa}</td>
+                    <td class="p-3">${s.attendance}%</td>
+                    <td class="p-3">${s.backlogs}</td>
+                    <td class="p-3 font-semibold">${s.shi}</td>
+                    <td class="p-3">${segBadge(s.segment)}</td>
+                    <td class="p-3 text-[11px] text-gray-500">${quickReasons(s)}</td>
+                    <td class="p-3"><span class="px-2.5 py-1 text-[11px] rounded-full font-semibold ${tierColor}">${s.tier}</span></td>
+                    <td class="p-3"><button onclick="openStudentReport(${processedData.indexOf(s)})" class="px-2.5 py-1 text-[11px] font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg border border-orange-200"><i class="fa-solid fa-file-lines"></i> View Report</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetRiskFilters() {
+            document.getElementById('filterDept').value = 'ALL';
+            document.getElementById('filterYear').value = 'ALL';
+            document.getElementById('filterSection').value = 'ALL';
+            document.getElementById('filterRiskLevel').value = 'ALL';
+            document.getElementById('filterSegment').value = 'ALL';
+            document.getElementById('filterGender').value = 'ALL';
+            applyRiskFilters();
+        }
+
+        // ---------- Executive Overview ----------
+        let overviewFilter = { dept: 'ALL', year: 'ALL' };
+
+        function getOverviewData() {
+            return processedData
+                .map((st, i) => ({ ...st, _i: i }))
+                .filter(st => (overviewFilter.dept === 'ALL' || st.dept === overviewFilter.dept) &&
+                              (overviewFilter.year === 'ALL' || st.year === overviewFilter.year));
+        }
+
+        function setOverviewDept(d) { overviewFilter.dept = d; renderOverview(); }
+        function setOverviewYear(y) { overviewFilter.year = y; renderOverview(); }
+        function resetOverviewFilters() { overviewFilter = { dept: 'ALL', year: 'ALL' }; renderOverview(); }
+
+        // Jump to Risk & Intervention with filters applied (keeps current overview filters)
+        function drillToRisk(extra) {
+            const f = Object.assign({ dept: overviewFilter.dept, year: overviewFilter.year, tier: 'ALL' }, extra || {});
+            document.getElementById('filterDept').value = f.dept;
+            document.getElementById('filterYear').value = f.year;
+            document.getElementById('filterRiskLevel').value = f.tier;
+            document.getElementById('filterSection').value = 'ALL';
+            document.getElementById('filterSegment').value = 'ALL';
+            document.getElementById('filterGender').value = 'ALL';
+            applyRiskFilters();
+            showTab('risk-intervention');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderOverview() {
+            const data = getOverviewData();
+            const n = data.length;
+
+            document.querySelectorAll('.dept-chip').forEach(b => b.classList.toggle('chip-on', b.dataset.dept === overviewFilter.dept));
+            document.getElementById('overviewYear').value = overviewFilter.year;
+            const scope = [];
+            if (overviewFilter.dept !== 'ALL') scope.push(overviewFilter.dept);
+            if (overviewFilter.year !== 'ALL') scope.push(overviewFilter.year);
+            document.getElementById('overviewScope').textContent = scope.length ? `Showing: ${scope.join(' · ')} (${n} students)` : `Showing all ${n} students`;
+
+            animateNumber('kpiTotalStudents', n, 0, '');
+            animateNumber('kpiAvgSuccess', n ? data.reduce((a, x) => a + x.shi, 0) / n : 0, 1, '');
+            animateNumber('kpiAtRisk', data.filter(x => x.tier === 'At-Risk').length, 0, '');
+            animateNumber('kpiPlacementReady', n ? Math.round(data.filter(x => x.placementReady).length / n * 100) : 0, 0, '%');
+
+            renderInsights(data);
+            renderExecutiveCharts(data);
+            renderExplainCharts(data);
+        }
+
+        function renderInsights(data) {
+            const el = document.getElementById('insightsPanel');
+            const n = data.length;
+            if (!n) {
+                el.innerHTML = '<p class="text-xs text-gray-500 col-span-full">No data yet. Click "Load Custom Data" to import a CSV, or load the sample data to see insights here.</p>';
+                return;
+            }
+            const items = [];
+            const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+            const avgOf = (arr, k) => arr.length ? arr.reduce((a, x) => a + x[k], 0) / arr.length : 0;
+
+            // 1. Risk
+            const atRisk = data.filter(x => x.tier === 'At-Risk');
+            items.push(atRisk.length
+                ? { icon: 'fa-triangle-exclamation', c: 'red', title: `${pct(atRisk.length, n)}% are at risk`, text: `${atRisk.length} of ${n} students need extra support.` }
+                : { icon: 'fa-circle-check', c: 'emerald', title: 'No students at risk', text: 'Everyone in this view is meeting the minimum standards.' });
+
+            // 2. Departments
+            const depts = DEPARTMENTS.map(d => ({ d, list: data.filter(x => x.dept === d) })).filter(x => x.list.length)
+                .map(x => ({ d: x.d, cgpa: avgOf(x.list, 'cgpa') }));
+            if (depts.length > 1) {
+                const best = depts.reduce((a, b) => b.cgpa > a.cgpa ? b : a);
+                const worst = depts.reduce((a, b) => b.cgpa < a.cgpa ? b : a);
+                items.push({ icon: 'fa-building-columns', c: 'orange', title: `${best.d} leads on CGPA`, text: `Average ${best.cgpa.toFixed(2)}. ${worst.d} is lowest at ${worst.cgpa.toFixed(2)}.` });
+            } else if (depts.length === 1) {
+                items.push({ icon: 'fa-building-columns', c: 'orange', title: `${depts[0].d} average CGPA`, text: `${depts[0].cgpa.toFixed(2)} out of 10.` });
+            }
+
+            // 3. Attendance gap
+            const others = data.filter(x => x.tier !== 'At-Risk');
+            if (atRisk.length && others.length) {
+                items.push({ icon: 'fa-user-clock', c: 'amber', title: 'Attendance makes a difference', text: `At-risk students attend ${avgOf(atRisk, 'attendance').toFixed(0)}% of classes vs ${avgOf(others, 'attendance').toFixed(0)}% for the rest.` });
+            } else {
+                items.push({ icon: 'fa-user-clock', c: 'amber', title: `${avgOf(data, 'attendance').toFixed(0)}% average attendance`, text: `${data.filter(x => x.attendance < 75).length} students are below 75%.` });
+            }
+
+            // 4. Placement
+            const ready = data.filter(x => x.placementReady);
+            items.push({ icon: 'fa-briefcase', c: 'emerald', title: `${pct(ready.length, n)}% placement ready`, text: `${ready.length} students meet the score, coding and backlog requirements.` });
+
+            document.getElementById('insightsPanel').innerHTML = items.map(i => `
+                <div class="flex items-start gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="w-9 h-9 shrink-0 rounded-full bg-${i.c}-100 text-${i.c}-600 flex items-center justify-center"><i class="fa-solid ${i.icon}"></i></div>
+                    <div><p class="text-sm font-bold text-gray-800">${i.title}</p><p class="text-xs text-gray-500 mt-0.5">${i.text}</p></div>
+                </div>`).join('');
+        }
+
+        // Render Executive Overview Charts
+        function renderExecutiveCharts(data) {
+            ['successDist', 'riskDist', 'deptPerf', 'yearTrends', 'attVsSuccess', 'placementReadiness'].forEach(key => {
+                if (chartInstances[key]) chartInstances[key].destroy();
+            });
+            const n = data.length;
+            const pct = v => n ? Math.round(v / n * 100) : 0;
+            const pointer = (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; };
+
+            // 1. Success Score Distribution
+            const scoreBins = ['<50', '50-60', '60-70', '70-80', '80-90', '90-100'];
+            const scoreCounts = [0, 0, 0, 0, 0, 0];
+            data.forEach(st => {
+                if (st.shi < 50) scoreCounts[0]++;
+                else if (st.shi < 60) scoreCounts[1]++;
+                else if (st.shi < 70) scoreCounts[2]++;
+                else if (st.shi < 80) scoreCounts[3]++;
+                else if (st.shi < 90) scoreCounts[4]++;
+                else scoreCounts[5]++;
+            });
+            chartInstances.successDist = new Chart(document.getElementById('chartSuccessDist'), {
+                type: 'bar',
+                data: { labels: scoreBins, datasets: [{ label: 'Students', data: scoreCounts, backgroundColor: ['#ef4444', '#f87171', '#f59e0b', '#fbbf24', '#34d399', '#10b981'], borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { title: c => `Score ${c[0].label}`, label: c => `${c.parsed.y} students (${pct(c.parsed.y)}%)` } } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Students' } }, x: { title: { display: true, text: 'Success score' } } }
+                }
+            });
+
+            // 2. Risk Distribution (click -> drill down)
+            const tierNames = ['Top Performers', 'Average', 'At-Risk'];
+            const tierCounts = tierNames.map(t => data.filter(st => st.tier === t).length);
+            chartInstances.riskDist = new Chart(document.getElementById('chartRiskDist'), {
+                type: 'doughnut',
+                data: { labels: tierNames, datasets: [{ data: tierCounts, backgroundColor: ['#10b981', '#f59e0b', '#ef4444'] }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '60%',
+                    plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} students (${pct(c.parsed)}%)` } } },
+                    onHover: pointer,
+                    onClick: (e, els) => { if (els.length) drillToRisk({ tier: tierNames[els[0].index] }); }
+                }
+            });
+
+            // 3. Dept Performance (click -> drill down)
+            const deptAvgCGPA = DEPARTMENTS.map(d => {
+                const list = data.filter(st => st.dept === d);
+                return list.length ? +(list.reduce((a, st) => a + st.cgpa, 0) / list.length).toFixed(2) : 0;
+            });
+            chartInstances.deptPerf = new Chart(document.getElementById('chartDeptPerf'), {
+                type: 'bar',
+                data: { labels: DEPARTMENTS, datasets: [{ label: 'Avg CGPA', data: deptAvgCGPA, backgroundColor: accent().main, borderRadius: 4 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { min: 0, max: 10, title: { display: true, text: 'Avg CGPA' } } },
+                    onHover: pointer,
+                    onClick: (e, els) => { if (els.length) drillToRisk({ dept: DEPARTMENTS[els[0].index] }); }
+                }
+            });
+
+            // 4. Year Trends (click -> drill down)
+            const yearAvgSuccess = YEARS.map(y => {
+                const list = data.filter(st => st.year === y);
+                return list.length ? +(list.reduce((a, st) => a + st.shi, 0) / list.length).toFixed(1) : null;
+            });
+            chartInstances.yearTrends = new Chart(document.getElementById('chartYearTrends'), {
+                type: 'line',
+                data: { labels: YEARS, datasets: [{ label: 'Avg Success Score', data: yearAvgSuccess, borderColor: accent().dark, backgroundColor: `rgba(${accent().rgb}, 0.12)`, fill: true, tension: 0.3, pointRadius: 5, pointHoverRadius: 8, spanGaps: true }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { min: 0, max: 100, title: { display: true, text: 'Avg success score' } } },
+                    onHover: pointer,
+                    onClick: (e, els) => { if (els.length) drillToRisk({ year: YEARS[els[0].index] }); }
+                }
+            });
+
+            // 5. Attendance vs Success Score (click dot -> student report)
+            const pts = data.map(st => ({ x: st.attendance, y: st.shi, i: st._i, id: st.id }));
+            chartInstances.attVsSuccess = new Chart(document.getElementById('chartAttendanceVsSuccess'), {
+                type: 'scatter',
+                data: { datasets: [{ label: 'Students', data: pts, backgroundColor: data.map(st => st.tier === 'At-Risk' ? '#ef4444' : st.tier === 'Top Performers' ? '#10b981' : '#f59e0b'), pointRadius: 6, pointHoverRadius: 9 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.raw.id}: ${c.raw.x}% attendance, score ${c.raw.y}` } } },
+                    scales: { x: { title: { display: true, text: 'Attendance (%)' } }, y: { title: { display: true, text: 'Success score' } } },
+                    onHover: pointer,
+                    onClick: (e, els) => { if (els.length) openStudentReport(pts[els[0].index].i); }
+                }
+            });
+
+            // 6. Placement Readiness (click -> drill down)
+            chartInstances.placementReadiness = new Chart(document.getElementById('chartPlacementReadiness'), {
+                type: 'bar',
+                data: {
+                    labels: DEPARTMENTS,
+                    datasets: [
+                        { label: 'Ready', data: DEPARTMENTS.map(d => data.filter(st => st.dept === d && st.placementReady).length), backgroundColor: '#10b981' },
+                        { label: 'Not Ready', data: DEPARTMENTS.map(d => data.filter(st => st.dept === d && !st.placementReady).length), backgroundColor: '#d1d5db' }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { x: { stacked: true, ticks: { precision: 0 }, title: { display: true, text: 'Students' } }, y: { stacked: true } },
+                    onHover: pointer,
+                    onClick: (e, els) => { if (els.length) drillToRisk({ dept: DEPARTMENTS[els[0].index] }); }
+                }
+            });
+        }
+
+        // ---------- Overview: explainability charts ----------
+        function renderExplainCharts(data) {
+            ['scoreDrivers', 'riskTriggers'].forEach(k => { if (chartInstances[k]) chartInstances[k].destroy(); });
+            const n = data.length || 1;
+            const pts = FACTORS.map(f => f.mult * (data.reduce((a, x) => a + (Number(x[f.k]) || 0), 0) / n));
+            chartInstances.scoreDrivers = new Chart(document.getElementById('chartScoreDrivers'), {
+                type: 'bar',
+                data: { labels: FACTORS.map(f => f.label), datasets: [{ data: pts.map(v => +v.toFixed(1)), backgroundColor: pts.map(v => v < 0 ? '#ef4444' : accent().main), borderRadius: 4 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.x > 0 ? '+' : ''}${c.parsed.x} points on average` } } },
+                    scales: { x: { title: { display: true, text: 'Points added to Success Score' } } } }
+            });
+            const rules = [
+                ['Score below 60', x => x.shi < 60, '#ef4444'], ['CGPA below 6.5', x => x.cgpa < 6.5, '#ef4444'],
+                ['3+ backlogs', x => x.backlogs >= 3, '#ef4444'], ['Attendance below 75%', x => x.attendance < 75, '#f59e0b']
+            ];
+            const counts = rules.map(r => data.filter(r[1]).length);
+            chartInstances.riskTriggers = new Chart(document.getElementById('chartRiskTriggers'), {
+                type: 'bar',
+                data: { labels: rules.map(r => r[0]), datasets: [{ data: counts, backgroundColor: rules.map(r => r[2]), borderRadius: 4 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.x} students (${Math.round(c.parsed.x / n * 100)}%)` } } },
+                    scales: { x: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Students (amber = contributing factor only)' } } } }
+            });
+        }
+
+        // ---------- Count-up animation for KPI numbers ----------
+        function animateNumber(id, target, decimals, suffix) {
+            const el = document.getElementById(id);
+            const from = parseFloat(el.dataset.v || '0') || 0;
+            el.dataset.v = target;
+            if (el._raf) cancelAnimationFrame(el._raf);
+            const fmt = v => v.toFixed(decimals) + suffix;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || from === target) { el.textContent = fmt(target); return; }
+            const t0 = performance.now(), dur = 700;
+            const step = now => {
+                const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+                el.textContent = fmt(from + (target - from) * e);
+                if (t < 1) el._raf = requestAnimationFrame(step);
+            };
+            el._raf = requestAnimationFrame(step);
+        }
+
+        // ---------- Segmentation tab ----------
+        let selectedSegment = null;
+        function selectSegment(i) { selectedSegment = SEGMENTS[i].name; renderSegmentation(true); }
+
+        function renderSegmentation(light) {
+            const empty = document.getElementById('segEmpty'), body = document.getElementById('segBody');
+            if (!light && chartInstances.segDist) { chartInstances.segDist.destroy(); chartInstances.segDist = null; }
+            if (!processedData.length) { empty.classList.remove('hidden'); body.classList.add('hidden'); return; }
+            empty.classList.add('hidden'); body.classList.remove('hidden');
+
+            const n = processedData.length, groups = {};
+            SEGMENTS.forEach(sg => groups[sg.name] = []);
+            processedData.forEach((st, i) => groups[st.segment].push({ ...st, _i: i }));
+            if (!selectedSegment || !groups[selectedSegment] || !groups[selectedSegment].length)
+                selectedSegment = (SEGMENTS.find(sg => groups[sg.name].length) || SEGMENTS[0]).name;
+            const avg = (arr, k) => arr.length ? arr.reduce((a, x) => a + x[k], 0) / arr.length : 0;
+
+            if (!light) {
+                document.getElementById('segCards').innerHTML = SEGMENTS.map((sg, i) => {
+                    const g = groups[sg.name], sel = sg.name === selectedSegment;
+                    return `<div onclick="selectSegment(${i})" class="seg-card cursor-pointer bg-white p-4 rounded-xl border-2 shadow-sm" data-seg="${i}" style="border-color:${sel ? sg.color : 'transparent'}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full flex items-center justify-center" style="background:${sg.color}26;color:${sg.color}"><i class="fa-solid ${sg.icon} text-sm"></i></div>
+                            <p class="text-sm font-bold text-gray-800">${sg.name.replace('&', '&amp;')}</p></div>
+                            <div class="text-right"><p class="text-xl font-bold" style="color:${sg.color}">${g.length}</p><p class="text-[11px] text-gray-500">${Math.round(g.length / n * 100)}% of students</p></div>
+                        </div>
+                        <p class="text-[11px] text-gray-500 mt-2"><b>Rule:</b> ${sg.rule}</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Avg score <b>${avg(g, 'shi').toFixed(1)}</b> &middot; Avg CGPA <b>${avg(g, 'cgpa').toFixed(2)}</b></p>
+                    </div>`;
+                }).join('');
+            } else {
+                document.querySelectorAll('.seg-card').forEach(c => { const sg = SEGMENTS[c.dataset.seg]; c.style.borderColor = sg.name === selectedSegment ? sg.color : 'transparent'; });
+            }
+
+            const si = SEGMENTS.findIndex(x => x.name === selectedSegment), sg = SEGMENTS[si], g = groups[sg.name];
+            const rows = g.map(st => `<tr class="hover:bg-gray-50 transition">
+                    <td class="p-2 font-semibold text-gray-800">${st.id}</td><td class="p-2">${st.dept}</td><td class="p-2">${st.year}</td>
+                    <td class="p-2 font-semibold">${st.shi}</td><td class="p-2 text-gray-500">${st.segmentWhy}</td>
+                    <td class="p-2"><button onclick="openStudentReport(${st._i})" class="px-2 py-1 text-[11px] font-medium bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg border border-orange-200">View Report</button></td></tr>`).join('');
+            document.getElementById('segDetail').innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">${segBadge(sg.name)}<span class="text-sm font-bold text-gray-800">${g.length} students</span></div>
+                    <button onclick="exportSegmentCSV(${si})" class="text-xs px-3 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-100"><i class="fa-solid fa-download"></i> Export CSV</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                    <div class="bg-white p-3 rounded-lg border border-gray-200"><p class="font-semibold text-gray-700 mb-1"><i class="fa-solid fa-ruler text-orange-500"></i> Who is in this group</p><p class="text-gray-500">${sg.rule}</p></div>
+                    <div class="bg-white p-3 rounded-lg border border-gray-200"><p class="font-semibold text-gray-700 mb-1"><i class="fa-solid fa-bullseye text-orange-500"></i> Recommended action</p><p class="text-gray-500">${sg.action}</p></div>
+                </div>
+                <div class="overflow-auto max-h-80 border border-gray-200 rounded-lg bg-white">
+                    <table class="w-full text-left text-xs text-gray-700"><thead class="bg-gray-100 text-[11px] uppercase text-gray-600 sticky top-0"><tr>
+                        <th class="p-2">Student</th><th class="p-2">Dept</th><th class="p-2">Year</th><th class="p-2">Score</th><th class="p-2">Why they are here</th><th class="p-2">Report</th></tr></thead>
+                    <tbody class="divide-y divide-gray-200">${rows || '<tr><td colspan="6" class="p-4 text-center text-gray-500">No students in this segment.</td></tr>'}</tbody></table>
+                </div>`;
+
+            if (!light) {
+                chartInstances.segDist = new Chart(document.getElementById('chartSegments'), {
+                    type: 'doughnut',
+                    data: { labels: SEGMENTS.map(x => x.name), datasets: [{ data: SEGMENTS.map(x => groups[x.name].length), backgroundColor: SEGMENTS.map(x => x.color) }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '55%',
+                        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: c => `${c.label}: ${c.parsed} (${Math.round(c.parsed / n * 100)}%)` } } },
+                        onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; },
+                        onClick: (e, els) => { if (els.length) selectSegment(els[0].index); } }
+                });
+            }
+        }
+
+        function exportSegmentCSV(i) {
+            const sg = SEGMENTS[i];
+            const list = processedData.filter(st => st.segment === sg.name);
+            const head = ['Student ID', 'Department', 'Year', 'Section', 'CGPA', 'Attendance (%)', 'LMS (%)', 'Backlogs', 'Success Score', 'Risk Tier', 'Segment', 'Reason'];
+            const q = v => `"${String(v).replace(/"/g, '""')}"`;
+            const lines = [head.join(',')].concat(list.map(st => [st.id, st.dept, st.year, st.section, st.cgpa, st.attendance, st.lms, st.backlogs, st.shi, st.tier, st.segment, st.segmentWhy].map(q).join(',')));
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+            a.download = `segment-${sg.name.toLowerCase().replace(/[^a-z]+/g, '-')}.csv`;
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        // ---------- Student report: explainable score ----------
+        function renderExplainSection(st, box) {
+            const drivers = scoreDrivers(st);
+            const best = drivers.reduce((a, b) => b.delta > a.delta ? b : a), worst = drivers.reduce((a, b) => b.delta < a.delta ? b : a);
+            const fmt = v => (v > 0 ? '+' : '') + v.toFixed(1);
+            const summary = [
+                best.delta > 0.05 ? `<b class="text-emerald-600">Biggest boost:</b> ${best.label} (${fmt(best.delta)} pts vs cohort average).` : 'No factor is above the cohort average.',
+                worst.delta < -0.05 ? `<b class="text-red-600">Biggest drag:</b> ${worst.label} (${fmt(worst.delta)} pts vs cohort average).` : 'No factor is below the cohort average.'
+            ].join(' ');
+            const row = (ok, label, val) => `<li class="flex items-center justify-between gap-2"><span class="flex items-center gap-2"><i class="fa-solid ${ok ? 'fa-circle-check text-emerald-500' : 'fa-circle-xmark text-red-500'}"></i>${label}</span><span class="font-semibold text-gray-700">${val}</span></li>`;
+            const riskRules = [[st.shi >= 60, 'Success Score is 60 or more', st.shi], [st.cgpa >= 6.5, 'CGPA is 6.5 or more', st.cgpa], [st.backlogs < 3, 'Fewer than 3 backlogs', st.backlogs]];
+            const topRules = [[st.shi >= 80, 'Success Score is 80 or more', st.shi], [st.cgpa >= 8, 'CGPA is 8.0 or more', st.cgpa], [st.backlogs === 0, 'Zero backlogs', st.backlogs]];
+            const failed = riskRules.filter(r => !r[0]).map(r => r[1].replace(' is ', ' must be ').replace('Fewer', 'Needs fewer'));
+            const verdict = st.tier === 'At-Risk' ? `<span class="text-red-600 font-semibold">Flagged At-Risk</span> because ${riskRules.filter(r => !r[0]).length} rule(s) failed (any one is enough).`
+                : st.tier === 'Top Performers' ? '<span class="text-emerald-600 font-semibold">Top Performer</span>: no risk rule failed and all top criteria are met.'
+                : '<span class="text-amber-600 font-semibold">Average</span>: no risk rule failed, but not every Top Performer criterion is met yet.';
+            const seg = segInfo(st.segment);
+
+            box.insertAdjacentHTML('beforeend', `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-orange-500"></i> Why this Success Score?</h4>
+                        <p class="text-xs text-gray-500 mt-1 mb-2">Points above (right) or below (left) the cohort average for each factor.</p>
+                        <p class="text-xs text-gray-600 mb-3">${summary}</p>
+                        <div class="h-64 relative"><canvas id="chartStudentDrivers"></canvas></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-flag text-red-500"></i> Why this risk flag?</h4>
+                            <p class="text-xs text-gray-600 mt-1 mb-2">${verdict}</p>
+                            <p class="text-[11px] uppercase font-semibold text-gray-400 mb-1">Risk rules (all must pass)</p>
+                            <ul class="space-y-1 text-xs text-gray-600 mb-3">${riskRules.map(r => row(...r)).join('')}</ul>
+                            <p class="text-[11px] uppercase font-semibold text-gray-400 mb-1">Top Performer criteria (all required)</p>
+                            <ul class="space-y-1 text-xs text-gray-600">${topRules.map(r => row(...r)).join('')}</ul>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-layer-group text-orange-500"></i> Why this segment?</h4>
+                            <p class="text-xs mt-2">${segBadge(st.segment)}</p>
+                            <p class="text-xs text-gray-600 mt-2"><b>This student:</b> ${st.segmentWhy}.</p>
+                            <p class="text-xs text-gray-500 mt-1"><b>Segment rule:</b> ${seg.rule}.</p>
+                        </div>
+                    </div>
+                </div>`);
+
+            chartInstances.studentDrivers = new Chart(document.getElementById('chartStudentDrivers'), {
+                type: 'bar',
+                data: { labels: drivers.map(d => d.label), datasets: [{ data: drivers.map(d => +d.delta.toFixed(1)), backgroundColor: drivers.map(d => d.delta >= 0 ? '#10b981' : '#ef4444'), borderRadius: 4 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const d = drivers[c.dataIndex]; return `${fmt(d.delta)} pts (student ${+d.value.toFixed(1)} vs avg ${d.avg.toFixed(1)})`; } } } },
+                    scales: { x: { title: { display: true, text: 'Points vs cohort average' } } } }
+            });
+        }
+
+        function runSimulation() {
+            const attBoost = parseFloat(document.getElementById('simAttendance').value);
+            const lmsBoost = parseFloat(document.getElementById('simLMS').value);
+            const backlogClear = parseFloat(document.getElementById('simBacklog').value);
+
+            document.getElementById('simAttendanceVal').innerText = `+${attBoost}%`;
+            document.getElementById('simLMSVal').innerText = `+${lmsBoost}%`;
+            document.getElementById('simBacklogVal').innerText = `${backlogClear} Backlog(s)`;
+
+            const currentAtRisk = processedData.filter(s => s.tier === 'At-Risk').length;
+
+            let projectedAtRisk = 0;
+            processedData.forEach(s => {
+                const simAtt = Math.min(100, s.attendance + attBoost);
+                const simLMS = Math.min(100, s.lms + lmsBoost);
+                const simBacklog = Math.max(0, s.backlogs - backlogClear);
+
+                let simSHI = (0.25 * s.cgpa * 10) + (0.20 * simAtt) + (0.15 * simLMS) + (0.15 * s.coding) + (0.15 * s.skills) - (5.0 * simBacklog);
+                simSHI = Math.max(0, Math.min(100, Math.round(simSHI * 10) / 10));
+
+                let simTier = 'Average';
+                if (simSHI >= 80 && s.cgpa >= 8.0 && simBacklog === 0) simTier = 'Top Performers';
+                else if (simSHI < 60 || s.cgpa < 6.5 || simBacklog >= 3) simTier = 'At-Risk';
+
+                if (simTier === 'At-Risk') projectedAtRisk++;
+            });
+
+            document.getElementById('simCurrentAtRisk').innerText = currentAtRisk;
+            document.getElementById('simProjectedAtRisk').innerText = projectedAtRisk;
+
+            const reduction = currentAtRisk > 0 ? Math.round(((currentAtRisk - projectedAtRisk) / currentAtRisk) * 100) : 0;
+            document.getElementById('simReduction').innerText = `${reduction}%`;
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active-tab', btn.dataset.tab === tabId));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        }
+
+        function switchTab(evt, tabId) { showTab(tabId); }
+
+        // ---------- Individual Student Report ----------
+        function populateReportSelect() {
+            const sel = document.getElementById('reportStudentSelect');
+            const prevId = sel.value !== '' && processedData[sel.value] ? processedData[sel.value].id : null;
+            sel.innerHTML = '';
+            processedData.forEach((st, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = `${st.id} (${st.dept}, ${st.year})`;
+                sel.appendChild(opt);
+            });
+            const keep = prevId !== null ? processedData.findIndex(st => st.id === prevId) : -1;
+            if (processedData.length === 0) {
+                renderStudentReport(-1);
+            } else {
+                sel.value = keep >= 0 ? keep : 0;
+                renderStudentReport(parseInt(sel.value, 10));
+            }
+        }
+
+        function onReportSelectChange() {
+            renderStudentReport(parseInt(document.getElementById('reportStudentSelect').value, 10));
+        }
+
+        function openStudentReport(index) {
+            document.getElementById('reportStudentSelect').value = index;
+            renderStudentReport(index);
+            showTab('student-report');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function getRecommendations(st) {
+            const recs = [];
+            recs.push(`Segment action (${st.segment}): ${segInfo(st.segment).action}`);
+            if (st.attendance < 75) recs.push('Attendance is below 75%: arrange a counselling session and set a weekly attendance check-in.');
+            if (st.lms < 70) recs.push('Low LMS completion: assign a catch-up plan for pending modules with a mentor follow-up.');
+            if (st.backlogs >= 3) recs.push('Multiple backlogs: enrol in a structured backlog-clearance programme with remedial classes.');
+            else if (st.backlogs > 0) recs.push('Clear the outstanding backlog(s) before the next exam cycle.');
+            if (st.cgpa < 6.5) recs.push('CGPA is below 6.5: provide academic mentoring and peer tutoring.');
+            if (st.coding < 65) recs.push('Coding score is below the placement threshold (65): enrol in coding practice labs.');
+            if (st.tier === 'Top Performers') recs.push('Strong performer: consider peer-mentor roles, advanced projects, and placement fast-tracking.');
+            if (recs.length === 0) recs.push('On track. Keep monitoring and encourage continued engagement.');
+            return recs;
+        }
+
+        function renderStudentReport(index) {
+            if (chartInstances.studentRadar) { chartInstances.studentRadar.destroy(); chartInstances.studentRadar = null; }
+            if (chartInstances.studentDrivers) { chartInstances.studentDrivers.destroy(); chartInstances.studentDrivers = null; }
+            const empty = document.getElementById('reportEmpty');
+            const box = document.getElementById('reportContent');
+            const st = processedData[index];
+            if (!st) { empty.classList.remove('hidden'); box.classList.add('hidden'); box.innerHTML = ''; return; }
+            empty.classList.add('hidden');
+            box.classList.remove('hidden');
+
+            const n = processedData.length;
+            const avg = k => processedData.reduce((a, x) => a + (Number(x[k]) || 0), 0) / n;
+            const tierColor = st.tier === 'Top Performers' ? 'bg-emerald-100 text-emerald-800' :
+                              st.tier === 'Average' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800';
+            const card = (label, value, color) => `
+                <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                    <p class="text-xs uppercase font-semibold text-gray-400">${label}</p>
+                    <h3 class="text-xl font-bold ${color}">${value}</h3>
+                </div>`;
+
+            const parts = [
+                ['CGPA (25%)', 0.25 * st.cgpa * 10],
+                ['Attendance (20%)', 0.20 * st.attendance],
+                ['LMS Completion (15%)', 0.15 * st.lms],
+                ['Coding (15%)', 0.15 * st.coding],
+                ['Skills (15%)', 0.15 * st.skills],
+                ['Backlog Penalty', -5.0 * st.backlogs]
+            ];
+            const partsRows = parts.map(([l, v]) => `
+                <tr><td class="py-1.5 text-gray-600">${l}</td>
+                <td class="py-1.5 text-right font-semibold ${v < 0 ? 'text-red-600' : 'text-gray-800'}">${v.toFixed(1)}</td></tr>`).join('');
+
+            const recs = getRecommendations(st).map(r => `<li class="flex gap-2"><i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i><span>${r}</span></li>`).join('');
+
+            box.innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Student ${st.id}</h3>
+                        <p class="text-xs text-gray-500">${st.dept} &middot; ${st.year} &middot; ${st.section} &middot; ${st.gender}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 text-xs rounded-full font-semibold ${tierColor}">${st.tier}</span>
+                        <span class="px-2.5 py-1 text-xs rounded-full font-medium bg-gray-100 text-gray-700 border border-gray-200">${st.segment}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    ${card('Success Score', st.shi, 'text-orange-600')}
+                    ${card('CGPA', st.cgpa, 'text-gray-800')}
+                    ${card('Attendance', st.attendance + '%', 'text-gray-800')}
+                    ${card('LMS Completion', st.lms + '%', 'text-gray-800')}
+                    ${card('Backlogs', st.backlogs, st.backlogs > 0 ? 'text-red-600' : 'text-emerald-600')}
+                    ${card('Placement Ready', st.placementReady ? 'Yes' : 'No', st.placementReady ? 'text-emerald-600' : 'text-amber-600')}
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Student vs Cohort Average</h4>
+                        <div class="h-72 relative"><canvas id="chartStudentRadar"></canvas></div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Success Score Breakdown</h4>
+                            <table class="w-full text-xs"><tbody class="divide-y divide-gray-200">${partsRows}
+                                <tr><td class="pt-2 font-bold text-gray-800">Total (capped 0-100)</td><td class="pt-2 text-right font-bold text-orange-600">${st.shi}</td></tr>
+                            </tbody></table>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Recommended Actions</h4>
+                            <ul class="space-y-2 text-xs text-gray-700">${recs}</ul>
+                        </div>
+                    </div>
+                </div>`;
+
+            renderExplainSection(st, box);
+
+            chartInstances.studentRadar = new Chart(document.getElementById('chartStudentRadar'), {
+                type: 'radar',
+                data: {
+                    labels: ['CGPA (x10)', 'Attendance', 'LMS', 'Coding', 'Aptitude', 'Skills'],
+                    datasets: [
+                        { label: st.id, data: [st.cgpa * 10, st.attendance, st.lms, st.coding, st.aptitude, st.skills], borderColor: accent().main, backgroundColor: `rgba(${accent().rgb}, 0.2)` },
+                        { label: 'Cohort Avg', data: [avg('cgpa') * 10, avg('attendance'), avg('lms'), avg('coding'), avg('aptitude'), avg('skills')], borderColor: '#9ca3af', backgroundColor: 'rgba(156,163,175,0.15)', borderDash: [5, 5] }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } } }
+            });
+        }
+
+        // ---------- Theme (light / dark) ----------
+        function applyChartTheme(dark) {
+            Chart.defaults.color = dark ? '#d1d5db' : '#4b5563';
+            Chart.defaults.borderColor = dark ? '#374151' : '#e5e7eb';
+            Chart.defaults.elements.arc.borderColor = dark ? '#1f2937' : '#ffffff';
+        }
+
+        function syncThemeButton() {
+            const dark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            document.getElementById('themeLabel').textContent = dark ? 'Light' : 'Dark';
+            applyChartTheme(dark);
+        }
+
+        function toggleTheme() {
+            const dark = !document.documentElement.classList.contains('dark');
+            document.documentElement.classList.toggle('dark', dark);
+            try { localStorage.setItem('edupulse-theme', dark ? 'dark' : 'light'); } catch (e) {}
+            syncThemeButton();
+            renderDashboard(); // redraw charts with theme colours (data is preserved)
+        }
+
+        syncThemeButton();
+
+        // ---------- Colour palettes ----------
+        const PALETTES = {
+            ocean:  { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af' },
+            forest: { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#14b8a6',600:'#0d9488',700:'#0f766e',800:'#115e59' },
+            violet: { 50:'#f5f3ff',100:'#ede9fe',200:'#ddd6fe',300:'#c4b5fd',400:'#a78bfa',500:'#8b5cf6',600:'#7c3aed',700:'#6d28d9',800:'#5b21b6' },
+            rose:   { 50:'#fff1f2',100:'#ffe4e6',200:'#fecdd3',300:'#fda4af',400:'#fb7185',500:'#f43f5e',600:'#e11d48',700:'#be123c',800:'#9f1239' }
+        };
+        (function buildPaletteStyles() {
+            let css = '';
+            Object.entries(PALETTES).forEach(([name, sc]) => {
+                const p = `html[data-palette="${name}"] `;
+                [50, 100, 200, 300, 400, 500, 600, 700, 800].forEach(n => {
+                    const c = sc[n];
+                    css += `${p}.text-orange-${n}{color:${c}}${p}.bg-orange-${n}{background-color:${c}}${p}.border-orange-${n}{border-color:${c}}`;
+                    css += `${p}.hover\\:text-orange-${n}:hover{color:${c}}${p}.hover\\:bg-orange-${n}:hover{background-color:${c}}${p}.hover\\:border-orange-${n}:hover{border-color:${c}}${p}.focus\\:ring-orange-${n}:focus{--tw-ring-color:${c}}`;
+                    css += `${p}.file\\:bg-orange-${n}::file-selector-button{background-color:${c}}${p}.file\\:text-orange-${n}::file-selector-button{color:${c}}${p}.hover\\:file\\:bg-orange-${n}:hover::file-selector-button{background-color:${c}}`;
+                });
+            });
+            const st = document.createElement('style'); st.id = 'paletteStyles'; st.textContent = css; document.head.appendChild(st);
+        })();
+
+        function syncPaletteDots() {
+            const cur = document.documentElement.getAttribute('data-palette') || 'orange';
+            document.querySelectorAll('.palette-dot').forEach(d => d.classList.toggle('on', d.dataset.palette === cur));
+        }
+        function setPalette(name) {
+            document.documentElement.setAttribute('data-palette', name);
+            try { localStorage.setItem('edupulse-palette', name); } catch (e) {}
+            syncPaletteDots();
+            renderDashboard(); // redraw charts in the new accent colour
+        }
+        syncPaletteDots();
+        Chart.defaults.animation.duration = 900;
+        Chart.defaults.animation.easing = 'easeOutQuart';
+
+        // Data Import Modal Handling
+        const importModal = document.getElementById('importModal');
+        document.getElementById('openImportModal').onclick = () => importModal.classList.remove('hidden');
+        document.getElementById('closeImportModal').onclick = () => importModal.classList.add('hidden');
+
+        document.getElementById('loadDataBtn').onclick = async () => {
+            const fileInput = document.getElementById('csvFileInput');
+            const rawText = document.getElementById('rawCsvText').value;
+
+            if (fileInput.files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(e) { loadCsvContent(e.target.result); };
+                reader.onerror = function() { alert('Could not read the selected CSV file.'); };
+                reader.readAsText(fileInput.files[0]);
+            } else if (rawText.trim() !== '') {
+                loadCsvContent(rawText);
+            } else {
+                alert('Please upload a file or paste CSV text first.');
+            }
+        };
+
+        document.getElementById('resetDefaultBtn').onclick = () => { loadCsvContent(DEFAULT_CSV); };
+
+        const backendStatus = document.getElementById('backendStatus');
+        function setBackendStatus(message, isError) {
+            backendStatus.textContent = message;
+            backendStatus.className = `text-xs ${isError ? 'text-red-300' : 'text-emerald-300'}`;
+        };
+
+        async function apiRequest(path, options = {}) {
+            const response = await fetch(path, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...options.headers }
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(result.error || `Backend request failed (${response.status}).`);
+            return result;
+        }
+
+        document.getElementById('clearDataBtn').onclick = async () => {
+            try {
+                await apiRequest('/api/students', { method: 'DELETE' });
+                rawStudentsData = [];
+                processedData = [];
+                renderDashboard();
+                importModal.classList.add('hidden');
+                setBackendStatus('Backend connected · data cleared', false);
+            } catch (error) {
+                setBackendStatus('Backend error', true);
+                alert(`Could not clear data: ${error.message}`);
+            }
+        };
+
+        async function loadCsvContent(csvString) {
+            const parsed = parseCSV(csvString);
+            if (parsed.length === 0) {
+                alert('Could not parse valid CSV data.');
+                return;
+            }
+            try {
+                const result = await apiRequest('/api/students', {
+                    method: 'PUT',
+                    body: JSON.stringify({ students: parsed })
+                });
+                rawStudentsData = result.students;
+                processedData = processData(rawStudentsData);
+                renderDashboard();
+                importModal.classList.add('hidden');
+                document.getElementById('csvFileInput').value = '';
+                document.getElementById('rawCsvText').value = '';
+                setBackendStatus(`Backend connected · ${rawStudentsData.length} students saved`, false);
+            } catch (error) {
+                setBackendStatus('Backend error', true);
+                alert(`Could not save student data: ${error.message}`);
+            }
+        }
+
+        async function initializeDashboard() {
+            try {
+                const result = await apiRequest('/api/students');
+                rawStudentsData = result.students;
+                processedData = processData(rawStudentsData);
+                renderDashboard();
+                setBackendStatus(`Backend connected · ${rawStudentsData.length} students loaded`, false);
+            } catch (error) {
+                renderDashboard();
+                setBackendStatus('Backend unavailable · start with npm start', true);
+                console.error('Could not load student data from the backend:', error);
+            }
+        }
+
+        initializeDashboard();
+    </script>
+</body>
+</html>
